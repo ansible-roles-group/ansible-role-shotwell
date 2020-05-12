@@ -1,0 +1,50 @@
+---
+
+- name: Install Shotwell
+  become: yes
+  pacman:
+    state: latest
+    update_cache: yes
+    name: shotwell
+  tags:
+    - photo:management:shotwell
+
+- name: Install some helper scripts from my dotfiles
+  when: dotfiles_path is defined
+  become: yes
+  file:
+    state: link
+    src: '{{ dotfiles_path }}/shotwell/{{ item }}'
+    dest: '/usr/local/bin/{{ item }}'
+    mode: 'u=rwx,g=rwx,o=rx'
+  with_items:
+    - shotwelldir
+    - shotwell-external-disk
+  tags:
+    - dotfiles
+    - photo:management:shotwell:helper
+
+- name: Ensure desktop menu entries folders exists
+  file:
+    state: directory
+    path: "/home/{{ user_name }}/.local/share/applications"
+    owner: "{{ user_name }}"
+    group: "{{ user_group }}"
+  tags:
+    - photo:management:shotwell:helper
+    - dotfiles:launcher
+
+- name: Link desktop entry shortcuts from my dotfiles
+  when: dotfiles_path is defined
+  file:
+    state: link
+    src: "{{ dotfiles_path }}/shotwell/{{ item }}"
+    dest: "/home/{{ user_name }}/.local/share/applications/{{ item }}"
+    owner: "{{ user_name }}"
+    group: "{{ user_group }}"
+  with_items:
+    - shotwell-external-disk.desktop
+  tags:
+    - photo:management:shotwell:helper
+    - dotfiles:launcher
+
